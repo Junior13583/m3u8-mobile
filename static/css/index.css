@@ -1,0 +1,338 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    font-size: 16px;
+    overflow: hidden;
+}
+
+.container {
+    width: 100%;
+    height: 100%; /* 继承父级高度，或直接设置固定高度（如100vh） */
+    display: flex;
+    flex-direction: column; /* 垂直排列子元素 */
+}
+
+.video-container {
+    width: 100%;
+    padding-top: 56.25%; /* 9/16宽高比 */
+    flex-shrink: 0; /* 禁止压缩高度 */
+    position: relative; /* 为内部内容提供定位上下文 */
+}
+
+.play-title {
+    flex-shrink: 0;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    font-size: 14px;
+    color: #999;
+    display: flex;
+    padding: 8px;
+    border: 1px solid #dfdfdf;
+    background: #f0f0f0;
+}
+
+.list-desc {
+
+}
+
+.add {
+    margin-left: auto;
+}
+
+.play-list {
+    flex-grow: 1; /* 占据剩余空间 */
+    background: #f0f0f0; /* 仅为示意 */
+    overflow-y: auto;
+}
+
+.play-item {
+    display: flex;
+    align-items: center;
+    height: 95px;
+    padding: 8px;
+    border-bottom: 1px solid #dfdfdf;
+}
+
+.play-item.dragging {
+    opacity: 0.5;
+    background-color: #e9e9e9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
+}
+
+/* 在index.css中添加 */
+.play-item.placeholder {
+    background-color: #e0e0e0;
+    border: 2px dashed #999;
+    opacity: 0.7;
+}
+
+.preview-jgp {
+    width: 135px;
+    height: 100%;
+    background-image: url(../img/preview.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.video-info {
+    flex-grow: 1;
+    padding-left: 8px;
+    height: 100%;
+    min-width: 0; /* 防止内容撑开（关键！） */
+}
+
+.video-title {
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 21px;
+}
+
+.video-url {
+    font-size: 14px;
+    color: #999;
+    line-height: 16px;
+    overflow: hidden;
+    word-break: break-all;
+    height: 48px;
+    margin-top: 5px;
+    max-width: 90%;
+}
+
+.video-edit {
+    display: flex;
+    font-size: 14px;
+    color: #999;
+    text-align: center;
+    line-height: 19px;
+    margin-top: 5px;
+}
+
+.play-times {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.edit {
+    width: 30px;
+}
+
+.playing{
+    display: none;
+    width: 55px;
+    color: #0064ff;
+}
+
+.mask {
+    position: absolute;
+    margin-top: -100vh;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7); /* 半透明黑色背景 */
+    transform: translateZ(0);
+    z-index: 500; /* 确保在最上层 */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+
+.mask.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    width: 100vw;
+    height: 350px;
+    box-sizing: border-box;
+    position: absolute;
+    z-index: 999;
+    margin-top: -350px;
+    background: #f0f0f0;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    transform: translateY(100%);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(100%);
+    }
+}
+
+.slide-up {
+    animation: slideUp 0.5s forwards;
+}
+
+.slide-down {
+    animation: slideDown 0.5s forwards;
+}
+
+.ment-title {
+    font-weight: bold;
+    line-height: 25px;
+    text-align: left;
+    margin: 6px;
+}
+
+
+.float-input-group {
+    position: relative;
+    margin: 10px 0;
+}
+
+.float-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.float-input:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.float-label {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    color: #999;
+    font-size: 16px;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    background: white;
+    padding: 0 4px;
+}
+
+.float-input:focus ~ .float-label,
+.float-input:valid ~ .float-label {
+    top: -8px;
+    font-size: 14px;
+    color: #4a90e2;
+}
+
+
+.float-textarea-group {
+    position: relative;
+    margin: 10px 0;
+}
+
+.float-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 150px;
+    padding: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    word-break: break-all;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.float-textarea:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.float-textarea-label {
+    position: absolute;
+    top: 20px;
+    left: 16px;
+    color: #999;
+    font-size: 16px;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    background: white;
+    padding: 0 4px;
+}
+
+.float-textarea:focus ~ .float-textarea-label,
+.float-textarea:valid ~ .float-textarea-label {
+    top: -10px;
+    font-size: 14px;
+    color: #4a90e2;
+}
+
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+    justify-content: space-between;
+}
+
+.rounded-delete-btn, .rounded-save-btn {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rounded-delete-btn {
+    background: #fff;
+    color: #ff4447;
+    border: 1px solid #ffcdd2;
+    margin-left: 15%;
+}
+
+.rounded-delete-btn:hover {
+    background: #ffebee;
+    box-shadow: 0 4px 12px rgba(255, 68, 71, 0.2);
+}
+
+.rounded-save-btn {
+    background: #fff;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+    margin-right: 15%;
+}
+
+.rounded-save-btn:hover {
+    background: #e3f2fd;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+}
+
+.btn-icon {
+    transition: transform 0.3s ease;
+}
+
+.rounded-delete-btn:hover .btn-icon {
+    transform: scale(1.2);
+}
+
+.rounded-save-btn:hover .btn-icon {
+    transform: scale(1.2);
+}
