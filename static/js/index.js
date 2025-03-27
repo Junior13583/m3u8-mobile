@@ -178,7 +178,7 @@ function handleTouchMove(e) {
     if (isLongPress) {
         e.preventDefault();
         const touch = e.touches[0];
-        draggingItem.style.transform = `translate(${touch.clientX - startX}px, ${touch.clientY - startY}px)`;
+        draggingItem.style.transform = `translate(0px, ${touch.clientY - startY}px)`;
 
         const targetIndex = findDropTarget(touch.clientY);
         updatePlaceholderPosition(targetIndex);
@@ -202,22 +202,7 @@ function startDrag(item, touch) {
     draggingItem = item;
     draggingItem.classList.add('dragging');
 
-    // 创建占位符
-    placeholder = document.createElement('div');
-    placeholder.className = 'play-item placeholder';
-    placeholder.style.height = `${item.offsetHeight}px`;
 
-    // 记录原始位置
-    const originalNextSibling = item.nextSibling;
-
-    // 插入占位符到原始位置
-    if (originalNextSibling) {
-        playListElement.insertBefore(placeholder, originalNextSibling);
-    } else {
-        playListElement.appendChild(placeholder);
-    }
-
-    initialTop = touch.clientY;
 }
 
 function findDropTarget(yPos) {
