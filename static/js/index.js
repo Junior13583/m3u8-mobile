@@ -145,19 +145,14 @@ new Sortable(playList, {
     direction: 'vertical',
     delay: 500,
     onMove: function (/**Event*/evt) {
-        document.querySelectorAll('.sortable-drag').forEach(element => {
-            const style = getComputedStyle(element);
-            const matrix = style.transform.match(/matrix\(([^)]+)\)/);
-
-            if (matrix) {
-                const params = matrix[1].split(',').map(Number);
-                // 修改第5个参数（e）为0（索引从0开始）
-                params[4] = 0;
-                element.style.transform = `matrix(${params.join(',')})`;
-            }
-        });
-    },
-    onEnd: function (/**Event*/evt) {
-        console.log("结束拖动")
+        /*
+        evt.dragged; // 被拖拽的对象
+        evt.draggedRect; // 被拖拽的对象所在区域 {left, top, right, bottom}
+        evt.related; // 被替换的对象
+        evt.relatedRect; // DOMRect
+        evt.willInsertAfter; // 是在被替换对象的前面还是后面
+        originalEvent.clientY; // 鼠标的位置
+        */
+        console.log(evt.draggedRect)
     },
 });
