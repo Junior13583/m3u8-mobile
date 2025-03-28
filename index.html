@@ -19,97 +19,8 @@
             <div class="list-desc">播放列表</div>
             <div class="add">添加</div>
         </div>
-        <div class="play-list">
-            <div class="play-item" ontouchstart="handleTouchStart(event)"
-     ontouchmove="handleTouchMove(event)"
-     ontouchend="handleTouchEnd(event)">
-                <div class="preview-jgp"></div>
-                                    <div class="video-info">
-                                        <div class="video-title">${videoTitle}</div>
-                                        <div class="video-url">${videoUrl}</div>
-                                        <div class="video-edit">
-                                            <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
-                                            <div class="play-times">0</div>
-                                            <div class="edit">编辑</div>
-                                            <div class="playing">播放中...</div>
-                                        </div>
-                                    </div>
-            </div>
-            <div class="play-item" ontouchstart="handleTouchStart(event)"
-     ontouchmove="handleTouchMove(event)"
-     ontouchend="handleTouchEnd(event)">
-                <div class="preview-jgp"></div>
-                                    <div class="video-info">
-                                        <div class="video-title">${videoTitle}</div>
-                                        <div class="video-url">${videoUrl}</div>
-                                        <div class="video-edit">
-                                            <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
-                                            <div class="play-times">0</div>
-                                            <div class="edit">编辑</div>
-                                            <div class="playing">播放中...</div>
-                                        </div>
-                                    </div>
-            </div>
-            <div class="play-item" ontouchstart="handleTouchStart(event)"
-     ontouchmove="handleTouchMove(event)"
-     ontouchend="handleTouchEnd(event)">
-                <div class="preview-jgp"></div>
-                                    <div class="video-info">
-                                        <div class="video-title">${videoTitle}</div>
-                                        <div class="video-url">${videoUrl}</div>
-                                        <div class="video-edit">
-                                            <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
-                                            <div class="play-times">0</div>
-                                            <div class="edit">编辑</div>
-                                            <div class="playing">播放中...</div>
-                                        </div>
-                                    </div>
-            </div>
-            <div class="play-item" ontouchstart="handleTouchStart(event)"
-     ontouchmove="handleTouchMove(event)"
-     ontouchend="handleTouchEnd(event)">
-                <div class="preview-jgp"></div>
-                                    <div class="video-info">
-                                        <div class="video-title">${videoTitle}</div>
-                                        <div class="video-url">${videoUrl}</div>
-                                        <div class="video-edit">
-                                            <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
-                                            <div class="play-times">0</div>
-                                            <div class="edit">编辑</div>
-                                            <div class="playing">播放中...</div>
-                                        </div>
-                                    </div>
-            </div>
-            <div class="play-item" ontouchstart="handleTouchStart(event)"
-     ontouchmove="handleTouchMove(event)"
-     ontouchend="handleTouchEnd(event)">
-                <div class="preview-jgp"></div>
-                                    <div class="video-info">
-                                        <div class="video-title">${videoTitle}</div>
-                                        <div class="video-url">${videoUrl}</div>
-                                        <div class="video-edit">
-                                            <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
-                                            <div class="play-times">0</div>
-                                            <div class="edit">编辑</div>
-                                            <div class="playing">播放中...</div>
-                                        </div>
-                                    </div>
-            </div>
-            <div class="play-item" ontouchstart="handleTouchStart(event)"
-     ontouchmove="handleTouchMove(event)"
-     ontouchend="handleTouchEnd(event)">
-                <div class="preview-jgp"></div>
-                                    <div class="video-info">
-                                        <div class="video-title">${videoTitle}</div>
-                                        <div class="video-url">${videoUrl}</div>
-                                        <div class="video-edit">
-                                            <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
-                                            <div class="play-times">0</div>
-                                            <div class="edit">编辑</div>
-                                            <div class="playing">播放中...</div>
-                                        </div>
-                                    </div>
-            </div>
+        <div class="play-list" id="playList">
+
         </div>
     </div>
     <div class="mask"></div>
@@ -139,7 +50,7 @@
             </button>
         </div>
     </div>
-    <script src="static/js/flip.js"></script>
+    <script src="static/js/Sortable.min.js"></script>
     <script src="static/js/index.js"></script>
 </body>
 </html>

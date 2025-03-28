@@ -1,6 +1,5 @@
 const addElement = document.querySelector('.add');
 const playListElement = document.querySelector('.play-list');
-const containerHeight = playListElement.getBoundingClientRect().height;
 const menuElement = document.querySelector('.menu');
 const maskElement = document.querySelector('.mask');
 const inputElement = document.querySelector('#floatInput');
@@ -9,14 +8,6 @@ const deleteElement = document.querySelector('.rounded-delete-btn');
 const saveElement = document.querySelector('.rounded-save-btn')
 
 let modifyItem = '';
-let items = [];
-let activeItem = null;
-let startY = 0;
-let startTop = 0;
-let startBottom = 0
-let currentIndex = 0;
-let dragTimeout = null;
-let isDragging = false;
 
 
 class VideoItem {
@@ -78,10 +69,6 @@ saveElement.addEventListener('click', () => {
         if (modifyItem === '') {
             let fillItem = document.createElement('div')
             fillItem.setAttribute("class", "play-item");
-            // 添加触摸事件
-            fillItem.addEventListener('touchstart', handleTouchStart);
-            fillItem.addEventListener('touchmove', handleTouchMove);
-            fillItem.addEventListener('touchend', handleTouchEnd);
             // 添加播放列表项
             fillItem.innerHTML = `<div class="preview-jgp"></div>
                                     <div class="video-info">
@@ -146,82 +133,31 @@ function changePlayStatus(element) {
     element.querySelector('.playing').style.display = 'block';
 }
 
+// https://sortablejs.com/options
+new Sortable(playList, {
+    animation: 300,
+    // 移动之后原位置元素的样式
+    ghostClass: 'sortable-ghost',
+    // 触发拖动但没移动的样式
+    chosenClass: "sortable-choose",
+    // 正在拖动的样式
+    dragClass: "sortable-drag",
+    direction: 'vertical',
+    delay: 500,
+    onMove: function (/**Event*/evt) {
+        document.querySelectorAll('.sortable-drag').forEach(element => {
+            const style = getComputedStyle(element);
+            const matrix = style.transform.match(/matrix\(([^)]+)\)/);
 
-// 触摸开始
-function handleTouchStart(e) {
-    dragTimeout = setTimeout(() => {
-        activeItem = e.target.closest(".play-item");
-        items = Array.from(document.querySelectorAll('.play-item'));
-        isDragging = true;
-        // 记录触摸位置距离顶部的距离
-        startY = e.touches[0].clientY;
-        startTop = activeItem.getBoundingClientRect().top;
-        startBottom = activeItem.getBoundingClientRect().bottom;
-        currentIndex = items.indexOf(activeItem);
-        activeItem.classList.add('active');
-    }, 500);
-
-}
-
-// 触摸移动
-function handleTouchMove(e) {
-    const y = e.touches[0].clientY - startY;
-    if (!isDragging) {
-        if (Math.abs(y) > 1) {
-            clearTimeout(dragTimeout);
-        }
-    } else {
-        if (!activeItem) return;
-        activeItem.style.transform = `translateY(${y}px)`;
-        items.forEach((item, index) => {
-            if (item === activeItem) return;
-
-            let itemTop = item.getBoundingClientRect().top;
-            let itemBottom = item.getBoundingClientRect().bottom;
-            let activeTop = activeItem.getBoundingClientRect().top;
-            let activeBottom = activeItem.getBoundingClientRect().bottom;
-            console.log(activeTop + " " + activeBottom + " " );
-            let modifiedY = (itemTop + itemBottom) / 2 - (startTop + startBottom) / 2;
-
-            // 碰撞检测：中心点在目标元素范围内
-            if ((activeTop + activeBottom) / 2 > itemTop && (activeTop + activeBottom) / 2 < itemBottom
-            ) {
-                if (y > 0) {
-                    // 往下移动
-                    playListElement.insertBefore(activeItem, item.nextElementSibling);
-                } else {
-                    // 往上移动
-                    playListElement.insertBefore(activeItem, item);
-                }
-                activeItem.style.transform = `translateY(${y - modifiedY}px)`;
-
-
-                startY += modifiedY;
-                startTop = itemTop;
-                startBottom = itemBottom;
+            if (matrix) {
+                const params = matrix[1].split(',').map(Number);
+                // 修改第5个参数（e）为0（索引从0开始）
+                params[4] = 0;
+                element.style.transform = `matrix(${params.join(',')})`;
             }
         });
-    }
-
-}
-
-// 触摸结束
-function handleTouchEnd() {
-    clearTimeout(dragTimeout);
-    if (isDragging) {
-        if (!activeItem) return;
-        activeItem.classList.remove('active');
-        activeItem = null;
-        isDragging = false;
-        // 重置位置并应用过渡
-        setTimeout(() => {
-            items.forEach(item => {
-                item.style.transform = 'translateY(0)';
-            });
-        }, 10);
-    } else {
-        // 处理短按事件
-    }
-
-}
-
+    },
+    onEnd: function (/**Event*/evt) {
+        console.log("结束拖动")
+    },
+});
