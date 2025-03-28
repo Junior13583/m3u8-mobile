@@ -1,5 +1,6 @@
 const addElement = document.querySelector('.add');
 const playListElement = document.querySelector('.play-list');
+const containerHeight = playListElement.getBoundingClientRect().height;
 const menuElement = document.querySelector('.menu');
 const maskElement = document.querySelector('.mask');
 const inputElement = document.querySelector('#floatInput');
@@ -8,6 +9,15 @@ const deleteElement = document.querySelector('.rounded-delete-btn');
 const saveElement = document.querySelector('.rounded-save-btn')
 
 let modifyItem = '';
+let items = [];
+let activeItem = null;
+let startY = 0;
+let startTop = 0;
+let startBottom = 0
+let currentIndex = 0;
+let dragTimeout = null;
+let isDragging = false;
+
 
 class VideoItem {
     constructor(title, url, playTimes, order) {
@@ -28,7 +38,7 @@ addElement.addEventListener('click', () => {
 })
 
 
-playListElement.addEventListener('click',(event)=>{
+playListElement.addEventListener('click', (event) => {
     let playItem = event.target.closest('.play-item');
     if (playItem) {
         if (event.target === playItem.querySelector('.edit')) {
@@ -38,7 +48,7 @@ playListElement.addEventListener('click',(event)=>{
             inputElement.value = playItem.querySelector('.video-title').innerText;
             textareaElement.value = playItem.querySelector('.video-url').innerText;
             modifyItem = playItem;
-        }else {
+        } else {
             // 播放列表点击事件
             changePlayStatus(playItem);
         }
@@ -46,28 +56,32 @@ playListElement.addEventListener('click',(event)=>{
 })
 
 
-maskElement.addEventListener('click',()=>{
+maskElement.addEventListener('click', () => {
     hideMenu();
 })
 
-deleteElement.addEventListener('click',()=>{
-    if (modifyItem !== ''){
+deleteElement.addEventListener('click', () => {
+    if (modifyItem !== '') {
         modifyItem.remove();
-    }else {
+    } else {
         alert("请选择要删除的视频!")
     }
     hideMenu();
 })
 
-saveElement.addEventListener('click',()=>{
+saveElement.addEventListener('click', () => {
     let videoTitle = inputElement.value === '' ? '默认视频标题' : inputElement.value;
     let videoUrl = textareaElement.value;
 
-    if (videoUrl !== ''){
+    if (videoUrl !== '') {
         // 处理添加逻辑
-        if (modifyItem === ''){
+        if (modifyItem === '') {
             let fillItem = document.createElement('div')
             fillItem.setAttribute("class", "play-item");
+            // 添加触摸事件
+            fillItem.addEventListener('touchstart', handleTouchStart);
+            fillItem.addEventListener('touchmove', handleTouchMove);
+            fillItem.addEventListener('touchend', handleTouchEnd);
             // 添加播放列表项
             fillItem.innerHTML = `<div class="preview-jgp"></div>
                                     <div class="video-info">
@@ -82,14 +96,14 @@ saveElement.addEventListener('click',()=>{
                                     </div>`;
             playListElement.appendChild(fillItem);
 
-        }else {
+        } else {
             // 处理修改逻辑
             modifyItem.querySelector('.video-title').innerText = videoTitle;
             modifyItem.querySelector('.video-url').innerText = videoUrl;
 
         }
 
-    }else {
+    } else {
         alert("请输入m3u8视频地址!")
     }
 
@@ -118,11 +132,11 @@ function changePlayStatus(element) {
     let playingElement = document.querySelectorAll('.playing');
 
     // 重置编辑按钮
-    editElement.forEach(edit =>{
+    editElement.forEach(edit => {
         edit.style.display = '';
     })
     // 重置播放中提示
-    playingElement.forEach(playing =>{
+    playingElement.forEach(playing => {
         playing.style.display = 'none';
     })
 
@@ -132,126 +146,82 @@ function changePlayStatus(element) {
     element.querySelector('.playing').style.display = 'block';
 }
 
-// 在index.js中添加以下代码
 
-let draggingItem = null;
-let placeholder = null;
-let initialTop = 0;
-let isLongPress = false;
-let dragTimeout;
-
-
-// 添加事件监听
-playListElement.addEventListener('touchstart', handleTouchStart);
-playListElement.addEventListener('touchmove', handleTouchMove);
-playListElement.addEventListener('touchend', handleTouchEnd);
-
+// 触摸开始
 function handleTouchStart(e) {
-    const touch = e.touches[0];
-    const target = e.target.closest('.play-item');
-
-    if (!target) return;
-
-    // 长按检测
-    isLongPress = false;
-    startX = touch.clientX;
-    startY = touch.clientY;
-    startTime = Date.now();
-
     dragTimeout = setTimeout(() => {
-        isLongPress = true;
-        startDrag(target, touch);
+        activeItem = e.target.closest(".play-item");
+        items = Array.from(document.querySelectorAll('.play-item'));
+        isDragging = true;
+        // 记录触摸位置距离顶部的距离
+        startY = e.touches[0].clientY;
+        startTop = activeItem.getBoundingClientRect().top;
+        startBottom = activeItem.getBoundingClientRect().bottom;
+        currentIndex = items.indexOf(activeItem);
+        activeItem.classList.add('active');
     }, 500);
+
 }
 
+// 触摸移动
 function handleTouchMove(e) {
-    if (!isLongPress) {
-        const dx = Math.abs(e.touches[0].clientX - startX);
-        const dy = Math.abs(e.touches[0].clientY - startY);
-
-        if (dx > 10 || dy > 10) {
+    const y = e.touches[0].clientY - startY;
+    if (!isDragging) {
+        if (Math.abs(y) > 1) {
             clearTimeout(dragTimeout);
-            isLongPress = false;
         }
+    } else {
+        if (!activeItem) return;
+        activeItem.style.transform = `translateY(${y}px)`;
+        items.forEach((item, index) => {
+            if (item === activeItem) return;
+
+            let itemTop = item.getBoundingClientRect().top;
+            let itemBottom = item.getBoundingClientRect().bottom;
+            let activeTop = activeItem.getBoundingClientRect().top;
+            let activeBottom = activeItem.getBoundingClientRect().bottom;
+            console.log(activeTop + " " + activeBottom + " " );
+            let modifiedY = (itemTop + itemBottom) / 2 - (startTop + startBottom) / 2;
+
+            // 碰撞检测：中心点在目标元素范围内
+            if ((activeTop + activeBottom) / 2 > itemTop && (activeTop + activeBottom) / 2 < itemBottom
+            ) {
+                if (y > 0) {
+                    // 往下移动
+                    playListElement.insertBefore(activeItem, item.nextElementSibling);
+                } else {
+                    // 往上移动
+                    playListElement.insertBefore(activeItem, item);
+                }
+                activeItem.style.transform = `translateY(${y - modifiedY}px)`;
+
+
+                startY += modifiedY;
+                startTop = itemTop;
+                startBottom = itemBottom;
+            }
+        });
     }
 
-    if (isLongPress) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        draggingItem.style.transform = `translate(0px, ${touch.clientY - startY}px)`;
-
-        const targetIndex = findDropTarget(touch.clientY);
-        updatePlaceholderPosition(targetIndex);
-    }
 }
 
+// 触摸结束
 function handleTouchEnd() {
     clearTimeout(dragTimeout);
-
-    if (isLongPress) {
-        const targetIndex = findDropTarget(event.changedTouches[0].clientY);
-        commitDrop(targetIndex);
-        resetDragState();
+    if (isDragging) {
+        if (!activeItem) return;
+        activeItem.classList.remove('active');
+        activeItem = null;
+        isDragging = false;
+        // 重置位置并应用过渡
+        setTimeout(() => {
+            items.forEach(item => {
+                item.style.transform = 'translateY(0)';
+            });
+        }, 10);
+    } else {
+        // 处理短按事件
     }
 
-    isLongPress = false;
 }
 
-
-function startDrag(item, touch) {
-    draggingItem = item;
-    draggingItem.classList.add('dragging');
-
-
-}
-
-function findDropTarget(yPos) {
-    let targetIndex = 0;
-
-    Array.from(playListElement.children).forEach((child, index) => {
-        if (child === draggingItem || child === placeholder) return;
-
-        const rect = child.getBoundingClientRect();
-        if (yPos >= rect.top && yPos <= rect.bottom) {
-            targetIndex = index;
-        }
-    });
-
-    return targetIndex;
-}
-
-function updatePlaceholderPosition(targetIndex) {
-    if (placeholder) {
-        playListElement.removeChild(placeholder);
-
-        if (targetIndex < playListElement.children.length - 1) {
-            playListElement.insertBefore(placeholder, playListElement.children[targetIndex]);
-        } else {
-            playListElement.appendChild(placeholder);
-        }
-    }
-}
-
-function commitDrop(targetIndex) {
-    const children = Array.from(playListElement.children);
-    const itemIndex = children.indexOf(draggingItem);
-
-    if (targetIndex < 0) targetIndex = 0;
-    if (targetIndex > children.length - 1) targetIndex = children.length - 1;
-
-    if (itemIndex < targetIndex) targetIndex--;
-
-    playListElement.insertBefore(draggingItem, playListElement.children[targetIndex]);
-}
-
-function resetDragState() {
-    draggingItem.style.transform = '';
-    draggingItem.classList.remove('dragging');
-
-    if (placeholder) {
-        playListElement.removeChild(placeholder);
-        placeholder = null;
-    }
-
-    draggingItem = null;
-}
