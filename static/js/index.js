@@ -15,14 +15,12 @@ class VideoItem {
         this.title = title;
         this.url = url;
         this.playTimes = playTimes;
-        this.order = order;
-    }
-
-    get toString() {
-        return `${this.title}\n${this.url}\n${this.playTimes}\n${this.order}`;
     }
 
 }
+
+// 从 localStorage 获取视频列表
+getItem();
 
 addElement.addEventListener('click', () => {
     showMenu();
@@ -42,6 +40,10 @@ playListElement.addEventListener('click', (event) => {
         } else {
             // 播放列表点击事件
             changePlayStatus(playItem);
+            // 增加播放次数
+            playItem.querySelector('.play-times').innerText = parseInt(playItem.querySelector('.play-times').innerText) + 1;
+            // 保存 localStorage
+            saveItem();
         }
     }
 })
@@ -67,35 +69,43 @@ saveElement.addEventListener('click', () => {
     if (videoUrl !== '') {
         // 处理添加逻辑
         if (modifyItem === '') {
-            let fillItem = document.createElement('div')
-            fillItem.setAttribute("class", "play-item");
-            // 添加播放列表项
-            fillItem.innerHTML = `<div class="preview-jgp"></div>
-                                    <div class="video-info">
-                                        <div class="video-title">${videoTitle}</div>
-                                        <div class="video-url">${videoUrl}</div>
-                                        <div class="video-edit">
-                                            <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
-                                            <div class="play-times">0</div>
-                                            <div class="edit">编辑</div>
-                                            <div class="playing">播放中...</div>
-                                        </div>
-                                    </div>`;
-            playListElement.appendChild(fillItem);
-
+            createItem(videoTitle, videoUrl);
         } else {
             // 处理修改逻辑
             modifyItem.querySelector('.video-title').innerText = videoTitle;
             modifyItem.querySelector('.video-url').innerText = videoUrl;
-
         }
-
+        // 保存 localStorage
+        saveItem()
     } else {
         alert("请输入m3u8视频地址!")
     }
-
     hideMenu();
 })
+
+/**
+ * 创建播放列表项
+ * @param videoTitle 视频标题
+ * @param videoUrl 视频地址
+ * @param playTimes 播放次数 默认为0
+ */
+function createItem(videoTitle, videoUrl, playTimes='0') {
+    let fillItem = document.createElement('div')
+    fillItem.setAttribute("class", "play-item");
+    // 添加播放列表项
+    fillItem.innerHTML = `<div class="preview-jgp"></div>
+                            <div class="video-info">
+                                <div class="video-title">${videoTitle}</div>
+                                <div class="video-url">${videoUrl}</div>
+                                <div class="video-edit">
+                                    <div class="play-times-title">播放量:&nbsp;&nbsp;</div>
+                                    <div class="play-times">${playTimes}</div>
+                                    <div class="edit">编辑</div>
+                                    <div class="playing">播放中...</div>
+                                </div>
+                            </div>`;
+    playListElement.appendChild(fillItem);
+}
 
 
 function showMenu() {
@@ -144,15 +154,39 @@ new Sortable(playList, {
     dragClass: "sortable-drag",
     direction: 'vertical',
     delay: 500,
-    onMove: function (/**Event*/evt) {
-        /*
-        evt.dragged; // 被拖拽的对象
-        evt.draggedRect; // 被拖拽的对象所在区域 {left, top, right, bottom}
-        evt.related; // 被替换的对象
-        evt.relatedRect; // DOMRect
-        evt.willInsertAfter; // 是在被替换对象的前面还是后面
-        originalEvent.clientY; // 鼠标的位置
-        */
-        console.log(evt.draggedRect)
+    easing: "cubic-bezier(0.33, 1, 0.68, 1)",
+    scrollSensitivity:60, // px, how near the mouse must be to an edge to start scrolling.
+    scrollSpeed: 10, // px
+    onEnd: function (/**Event*/evt) {
+        saveItem();
     },
 });
+
+
+/**
+ * 保存视频列表到 localStorage
+ */
+function saveItem() {
+    let allItems = document.querySelectorAll('.play-item');
+    let videoItems = [];
+    allItems.forEach(item => {
+        let videoItem = new VideoItem(
+            item.querySelector('.video-title').innerText,
+            item.querySelector('.video-url').innerText,
+            item.querySelector('.play-times').innerText,
+        );
+        videoItems.push(videoItem);
+    });
+    localStorage.setItem("playList", JSON.stringify(videoItems));
+}
+
+
+/**
+ * 从 localStorage 获取视频列表
+ */
+function getItem() {
+    let videoItems = JSON.parse(localStorage.getItem("playList"));
+    videoItems.forEach(item => {
+        createItem(item.title, item.url, item.playTimes);
+    });
+}
