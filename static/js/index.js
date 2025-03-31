@@ -1,3 +1,4 @@
+const video = document.querySelector('video');
 const addElement = document.querySelector('.add');
 const playListElement = document.querySelector('.play-list');
 const menuElement = document.querySelector('.menu');
@@ -5,13 +6,102 @@ const maskElement = document.querySelector('.mask');
 const inputElement = document.querySelector('#floatInput');
 const textareaElement = document.querySelector('#floatTextarea');
 const deleteElement = document.querySelector('.rounded-delete-btn');
-const saveElement = document.querySelector('.rounded-save-btn')
+const saveElement = document.querySelector('.rounded-save-btn');
 
 let modifyItem = '';
+let hls = null;
+let player = null;
+
+// 从 localStorage 获取视频列表
+getItem();
+
+
+function initHls(playUrl, playItem) {
+    if (hls) {
+        hls.destroy();
+    }
+
+    if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(playUrl);
+
+
+        hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+            let availableQualities = hls.levels.map((l) => l.height);
+            // 初始化Plyr
+            player = initPlyr(availableQualities);
+            // 增加播放次数
+            changePlayStatus(playItem, true);
+            // 保存 localStorage
+            saveItem();
+
+        });
+
+        hls.on(Hls.Events.ERROR, function (event, data) {
+            if (data.fatal) {
+                alert("无法播放视频，请检查网络连接或视频地址。")
+                changePlayStatus(playItem, false);
+                hls.destroy();
+            }
+        });
+
+        hls.attachMedia(video);
+        waitAndPlay().then(r => console.log("开始播放"));
+    }
+}
+
+function initPlyr(qualities) {
+    return new Plyr(video, {
+        title: 'Example Title',
+        controls: [
+            'play-large',
+            'play',
+            'progress',
+            'current-time',
+            'settings',
+            'airplay',
+            'download',
+            'fullscreen',
+        ],
+        clickToPlay: true,
+        ratio: '16:9',
+        speed: {
+            selected: 1,
+            options: [0.5, 1, 1.5, 2]
+        },
+        quality: {
+            default: qualities[qualities - 1], // 默认最高画质
+            options: qualities, // 初始占位选项
+            forced: true, // 强制显示质量选项
+            onChange: (quality) => handleQualityChange(quality)
+        }
+
+    });
+}
+
+// 质量切换处理
+function handleQualityChange(selectedQuality) {
+    hls.levels.forEach((level, levelIndex) => {
+        if (level.height === selectedQuality) {
+            console.log("Found quality match with " + selectedQuality);
+            hls.currentLevel = levelIndex;
+        }
+    });
+}
+
+
+async function waitAndPlay() {
+    // 等待 player 不为 null
+    while (player === null) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    // 执行播放
+    player.play();
+}
 
 
 class VideoItem {
-    constructor(title, url, playTimes, order) {
+    constructor(title, url, playTimes) {
         this.title = title;
         this.url = url;
         this.playTimes = playTimes;
@@ -19,8 +109,11 @@ class VideoItem {
 
 }
 
-// 从 localStorage 获取视频列表
-getItem();
+function playVideo(playUrl, playItem) {
+    // 先初始化 hls
+    initHls(playUrl, playItem);
+}
+
 
 addElement.addEventListener('click', () => {
     showMenu();
@@ -29,21 +122,20 @@ addElement.addEventListener('click', () => {
 
 playListElement.addEventListener('click', (event) => {
     let playItem = event.target.closest('.play-item');
+    let playTitle = playItem.querySelector('.video-title').innerText;
+    let playUrl = playItem.querySelector('.video-url').innerText;
+
     if (playItem) {
         if (event.target === playItem.querySelector('.edit')) {
             //编辑点击事件
             event.stopPropagation()
             showMenu();
-            inputElement.value = playItem.querySelector('.video-title').innerText;
-            textareaElement.value = playItem.querySelector('.video-url').innerText;
+            inputElement.value = playTitle;
+            textareaElement.value = playUrl;
             modifyItem = playItem;
         } else {
-            // 播放列表点击事件
-            changePlayStatus(playItem);
-            // 增加播放次数
-            playItem.querySelector('.play-times').innerText = parseInt(playItem.querySelector('.play-times').innerText) + 1;
-            // 保存 localStorage
-            saveItem();
+            // 播放视频
+            playVideo(playUrl, playItem)
         }
     }
 })
@@ -56,6 +148,7 @@ maskElement.addEventListener('click', () => {
 deleteElement.addEventListener('click', () => {
     if (modifyItem !== '') {
         modifyItem.remove();
+        saveItem();
     } else {
         alert("请选择要删除的视频!")
     }
@@ -89,11 +182,12 @@ saveElement.addEventListener('click', () => {
  * @param videoUrl 视频地址
  * @param playTimes 播放次数 默认为0
  */
-function createItem(videoTitle, videoUrl, playTimes='0') {
+function createItem(videoTitle, videoUrl, playTimes = '0') {
     let fillItem = document.createElement('div')
     fillItem.setAttribute("class", "play-item");
     // 添加播放列表项
-    fillItem.innerHTML = `<div class="preview-jgp"></div>
+    fillItem.innerHTML = `<div class="selected"></div>
+                            <div class="preview-jgp"></div>
                             <div class="video-info">
                                 <div class="video-title">${videoTitle}</div>
                                 <div class="video-url">${videoUrl}</div>
@@ -124,9 +218,15 @@ function hideMenu() {
     modifyItem = '';
 }
 
-function changePlayStatus(element) {
+function changePlayStatus(element, flag) {
     let editElement = document.querySelectorAll('.edit');
     let playingElement = document.querySelectorAll('.playing');
+    let selectItem = document.querySelectorAll('.selected');
+
+    if (flag) {
+        // 增加播放次数
+        element.querySelector('.play-times').innerText = parseInt(element.querySelector('.play-times').innerText) + 1;
+    }
 
     // 重置编辑按钮
     editElement.forEach(edit => {
@@ -136,11 +236,19 @@ function changePlayStatus(element) {
     playingElement.forEach(playing => {
         playing.style.display = 'none';
     })
+    // 重置选中的item
+    selectItem.forEach(select => {
+        select.style.display = 'none';
+    })
 
-    // 隐藏编辑按钮
-    element.querySelector('.edit').style.display = 'none';
-    // 添加播放中提示
-    element.querySelector('.playing').style.display = 'block';
+    element.querySelector('.selected').style.display = 'block';
+
+    if (flag) {
+        // 隐藏编辑按钮
+        element.querySelector('.edit').style.display = 'none';
+        // 添加播放中提示
+        element.querySelector('.playing').style.display = 'block';
+    }
 }
 
 // https://sortablejs.com/options
@@ -155,9 +263,9 @@ new Sortable(playList, {
     direction: 'vertical',
     delay: 500,
     easing: "cubic-bezier(0.33, 1, 0.68, 1)",
-    scrollSensitivity:60, // px, how near the mouse must be to an edge to start scrolling.
+    scrollSensitivity: 60, // px, how near the mouse must be to an edge to start scrolling.
     scrollSpeed: 10, // px
-    onEnd: function (/**Event*/evt) {
+    onEnd: function () {
         saveItem();
     },
 });
