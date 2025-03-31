@@ -1,4 +1,4 @@
-const video = document.querySelector('video');
+
 const addElement = document.querySelector('.add');
 const playListElement = document.querySelector('.play-list');
 const menuElement = document.querySelector('.menu');
@@ -19,7 +19,10 @@ getItem();
 function initHls(playUrl, playItem) {
     if (hls) {
         hls.destroy();
+        player.destroy();
     }
+    // 必须在此初始化播放器，否则清晰度或者字幕不会更新
+    const video = document.querySelector('video');
 
     if (Hls.isSupported()) {
         hls = new Hls();
@@ -29,7 +32,7 @@ function initHls(playUrl, playItem) {
         hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
             let availableQualities = hls.levels.map((l) => l.height);
             // 初始化Plyr
-            player = initPlyr(availableQualities);
+            player = initPlyr(availableQualities, video);
             // 增加播放次数
             changePlayStatus(playItem, true);
             // 保存 localStorage
@@ -46,11 +49,13 @@ function initHls(playUrl, playItem) {
         });
 
         hls.attachMedia(video);
-        waitAndPlay().then(r => console.log("开始播放"));
+
     }
+
+    // waitAndPlay().then(r => console.log("开始播放"));
 }
 
-function initPlyr(qualities) {
+function initPlyr(qualities, video) {
     return new Plyr(video, {
         title: 'Example Title',
         controls: [
@@ -70,11 +75,11 @@ function initPlyr(qualities) {
             options: [0.5, 1, 1.5, 2]
         },
         quality: {
-            default: qualities[qualities - 1], // 默认最高画质
+            default: qualities[qualities.length - 1], // 默认最高画质
             options: qualities, // 初始占位选项
             forced: true, // 强制显示质量选项
             onChange: (quality) => handleQualityChange(quality)
-        }
+        },
 
     });
 }
