@@ -33,6 +33,7 @@ function initHls(playUrl, playItem) {
             let availableQualities = hls.levels.map((l) => l.height);
             // 初始化Plyr
             player = initPlyr(availableQualities, video);
+            setMenuStyle()
             // 增加播放次数
             changePlayStatus(playItem, true);
             // 保存 localStorage
@@ -254,6 +255,18 @@ function changePlayStatus(element, flag) {
         // 添加播放中提示
         element.querySelector('.playing').style.display = 'block';
     }
+}
+
+function setMenuStyle() {
+    let allSetting = document.querySelector(".plyr__menu__container").querySelectorAll(".plyr__control--back");
+    let videoHeight = document.querySelector(".video-pre").offsetHeight - 80;
+    allSetting.forEach(setting => {
+        let settingMenu = setting.nextElementSibling;
+        if (settingMenu) {
+            settingMenu.style.maxHeight = videoHeight.toString() + 'px';
+            settingMenu.style.overflowY = 'auto';
+        }
+    })
 }
 
 // https://sortablejs.com/options
