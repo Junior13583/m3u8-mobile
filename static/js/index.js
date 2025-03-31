@@ -19,6 +19,9 @@ getItem();
 function initHls(playUrl, playItem) {
     if (hls) {
         hls.destroy();
+    }
+
+    if (player) {
         player.destroy();
     }
     // 必须在此初始化播放器，否则清晰度或者字幕不会更新
@@ -73,7 +76,7 @@ function initPlyr(qualities, video) {
         ratio: '16:9',
         speed: {
             selected: 1,
-            options: [0.5, 1, 1.5, 2]
+            options: [0.5, 1, 1.5, 2, 4, 8, 16]
         },
         quality: {
             default: qualities[qualities.length - 1], // 默认最高画质
@@ -259,7 +262,7 @@ function changePlayStatus(element, flag) {
 
 function setMenuStyle() {
     let allSetting = document.querySelector(".plyr__menu__container").querySelectorAll(".plyr__control--back");
-    let videoHeight = document.querySelector(".video-pre").offsetHeight - 80;
+    let videoHeight = document.querySelector(".video-pre").offsetHeight - 90;
     allSetting.forEach(setting => {
         let settingMenu = setting.nextElementSibling;
         if (settingMenu) {
@@ -312,7 +315,9 @@ function saveItem() {
  */
 function getItem() {
     let videoItems = JSON.parse(localStorage.getItem("playList"));
-    videoItems.forEach(item => {
-        createItem(item.title, item.url, item.playTimes);
-    });
+    if (videoItems) {
+        videoItems.forEach(item => {
+            createItem(item.title, item.url, item.playTimes);
+        });
+    }
 }
