@@ -54,7 +54,7 @@ function initHls(playUrl, playItem) {
 
         hls.attachMedia(video);
 
-    }
+    }else{alert("苹果执行")}
 
     // waitAndPlay().then(r => console.log("开始播放"));
 }
